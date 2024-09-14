@@ -47,3 +47,13 @@ export type SearchData = {
   channelAvatar: string
   tags: string[]
 }
+
+export type FavoriteVideo = {
+  id: number
+  title: string
+  author: string
+  views: number
+  likes: number
+  imageUrl: string
+  tags: string[]
+}
