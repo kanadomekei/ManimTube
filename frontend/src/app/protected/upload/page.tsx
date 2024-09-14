@@ -1,12 +1,14 @@
 'use client'
 import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
+import { uploadVideo, uploadThumbnail } from './actions'
+import React from 'react'
 
 const UploadForm = dynamic(() => import('@/components/UploadForm'), { ssr: false })
 const Preview = dynamic(() => import('@/components/Preview'), { ssr: false })
 const Article = dynamic(() => import('@/components/Article'), { ssr: false })
 
-export default function Component() {
+const Component: React.FC = () => {
   const [formData, setFormData] = useState({
     title: '',
     manimCode: '',
@@ -62,6 +64,9 @@ export default function Component() {
     console.log('Form submitted:', formData)
 
     try {
+      let videoUrl = null
+      let thumbnailUrl = null
+
       if (formData.manimFile) {
         const formDataToSend = new FormData()
         formDataToSend.append('file', formData.manimFile)
@@ -78,19 +83,30 @@ export default function Component() {
         const videoFormData = new FormData()
         videoFormData.append('file', videoFile)
 
-        const uploadResponse = await fetch('/api/upload-video', {
-          method: 'POST',
-          body: videoFormData,
-        })
+        const result = await uploadVideo(videoFormData)
 
-        if (!uploadResponse.ok) {
-          const errorData = await uploadResponse.json()
-          throw new Error(errorData.error || '動画のアップロードに失敗しました')
+        if (result.status !== 200) {
+          throw new Error(result.error || '動画のアップロードに失敗しました')
         }
 
-        const { videoUrl } = await uploadResponse.json()
-        console.log('アップロードされた動画のURL:', videoUrl)
+        console.log('アップロードされた動画のURL:', result.videoUrl)
       }
+
+      if (formData.thumbnailFile) {
+        const thumbnailFormData = new FormData()
+        thumbnailFormData.append('file', formData.thumbnailFile)
+        const thumbnailResult = await uploadThumbnail(thumbnailFormData)
+
+        if (thumbnailResult.status !== 200) {
+          throw new Error(thumbnailResult.error || 'サムネイルのアップロードに失敗しました')
+        }
+
+        thumbnailUrl = thumbnailResult.thumbnailUrl
+        console.log('アップロードされたサムネイルのURL:', thumbnailUrl)
+      }
+
+      // ここで videoUrl と thumbnailUrl を使用して、データベースに保存するなどの処理を行う
+
     } catch (error) {
       console.error('エラーが発生しました:', error)
       // エラーメッセージをユーザーに表示するなどの処理を追加
@@ -124,3 +140,5 @@ export default function Component() {
     </div>
   )
 }
+
+export default Component
