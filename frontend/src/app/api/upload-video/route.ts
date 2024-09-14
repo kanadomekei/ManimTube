@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/utils/supabase/server'
+import { uploadToSupabaseStorage } from '../../../utils/supabaseStorage'
 
 export async function POST(request: NextRequest) {
-  const supabase = createClient()
   const formData = await request.formData()
   const file = formData.get('file') as File
 
@@ -21,22 +20,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer())
     const fileName = `${Date.now()}_${file.name}`
-
-    const { error: uploadError } = await supabase.storage.from('videos').upload(fileName, buffer)
-    if (uploadError) {
-      console.error('Supabaseアップロードエラー:', uploadError)
-      return NextResponse.json({ error: 'ファイルのアップロードに失敗しました' }, { status: 500 })
-    }
-
-    const { data: urlData } = supabase.storage.from('videos').getPublicUrl(fileName)
-    if (!urlData || !urlData.publicUrl) {
-      console.error('公開URLの取得に失敗しました')
-      return NextResponse.json({ error: '公開URLの取得に失敗しました' }, { status: 500 })
-    }
-
-    return NextResponse.json({ videoUrl: urlData.publicUrl })
+    const videoUrl = await uploadToSupabaseStorage(file, 'videos', fileName)
+    return NextResponse.json({ videoUrl })
   } catch (error) {
     console.error('動画のアップロード中にエラーが発生しました:', error)
     return NextResponse.json(
