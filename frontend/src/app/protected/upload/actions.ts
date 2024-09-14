@@ -48,7 +48,9 @@ export async function uploadThumbnail(formData: FormData) {
 
   try {
     const fileName = `${Date.now()}_${file.name}`
+    console.log('アップロード開始:', fileName)
     const thumbnailUrl = await uploadToSupabaseStorage(file, 'thumbnails', fileName)
+    console.log('アップロード成功:', thumbnailUrl)
     return { thumbnailUrl, status: 200 }
   } catch (error) {
     console.error('サムネイルのアップロード中にエラーが発生しました:', error)

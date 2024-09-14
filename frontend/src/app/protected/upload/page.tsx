@@ -1,7 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
-import { uploadVideo, uploadThumbnail } from './actions'
+import { uploadVideo } from './actions' // uploadThumbnail を削除
 import React from 'react'
 
 const UploadForm = dynamic(() => import('@/components/UploadForm'), { ssr: false })
@@ -64,9 +64,6 @@ const Component: React.FC = () => {
     console.log('Form submitted:', formData)
 
     try {
-      let videoUrl = null
-      let thumbnailUrl = null
-
       if (formData.manimFile) {
         const formDataToSend = new FormData()
         formDataToSend.append('file', formData.manimFile)
@@ -91,22 +88,7 @@ const Component: React.FC = () => {
 
         console.log('アップロードされた動画のURL:', result.videoUrl)
       }
-
-      if (formData.thumbnailFile) {
-        const thumbnailFormData = new FormData()
-        thumbnailFormData.append('file', formData.thumbnailFile)
-        const thumbnailResult = await uploadThumbnail(thumbnailFormData)
-
-        if (thumbnailResult.status !== 200) {
-          throw new Error(thumbnailResult.error || 'サムネイルのアップロードに失敗しました')
-        }
-
-        thumbnailUrl = thumbnailResult.thumbnailUrl
-        console.log('アップロードされたサムネイルのURL:', thumbnailUrl)
-      }
-
-      // ここで videoUrl と thumbnailUrl を使用して、データベースに保存するなどの処理を行う
-
+      // ここで videoUrl を使用して、データベースに保存す���などの処理を行う
     } catch (error) {
       console.error('エラーが発生しました:', error)
       // エラーメッセージをユーザーに表示するなどの処理を追加
