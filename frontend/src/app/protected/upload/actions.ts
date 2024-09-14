@@ -1,6 +1,9 @@
 'use server'
 
 import { uploadToSupabaseStorage } from '../../../utils/supabaseStorage'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function uploadVideo(formData: FormData) {
   const file = formData.get('file') as File
@@ -55,5 +58,34 @@ export async function uploadThumbnail(formData: FormData) {
   } catch (error) {
     console.error('サムネイルのアップロード中にエラーが発生しました:', error)
     return { error: 'サムネイルのアップロード中にエラーが発生しました', status: 500 }
+  }
+}
+
+export async function createVideoRecord(data: {
+  userId: bigint
+  title: string
+  description?: string
+  videoUrl: string
+  manimUrl?: string
+  thumbnailUrl?: string
+  articleUrl?: string
+}) {
+  try {
+    const video = await prisma.video.create({
+      data: {
+        userId: data.userId,
+        title: data.title,
+        description: data.description,
+        videoUrl: data.videoUrl,
+        manimUrl: data.manimUrl,
+        thumbnailUrl: data.thumbnailUrl,
+        articleUrl: data.articleUrl,
+        // 必要に応じて他のフィールドも追加
+      },
+    })
+    return { video, status: 201 }
+  } catch (error) {
+    console.error('動画レコードの作成中にエラーが発生しました:', error)
+    return { error: '動画の保存中にエラーが発生しました', status: 500 }
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 import dynamic from 'next/dynamic'
 import { useState, useEffect } from 'react'
-import { uploadVideo } from './actions' // uploadThumbnail を削除
+import { uploadVideo, uploadThumbnail, createVideoRecord } from './actions'
 import React from 'react'
 
 const UploadForm = dynamic(() => import('@/components/UploadForm'), { ssr: false })
@@ -50,7 +50,7 @@ const Component: React.FC = () => {
     }
   }, [previewUrl, thumbnailUrl])
 
-  const handleFormSubmit = async (formData: {
+  const handleFormSubmit = async (formDataInput: {
     title: string
     tags: string[]
     manimFile: File | null
@@ -59,14 +59,17 @@ const Component: React.FC = () => {
     algorithmExplanation: string
     references: string[]
   }) => {
-    setFormData((prevData) => ({ ...prevData, ...formData }))
+    setFormData((prevData) => ({ ...prevData, ...formDataInput }))
     setIsLoading(true)
-    console.log('Form submitted:', formData)
+    console.log('Form submitted:', formDataInput)
 
     try {
-      if (formData.manimFile) {
+      let uploadedVideoUrl = ''
+      // let uploadedThumbnailUrl = ''
+
+      if (formDataInput.manimFile) {
         const formDataToSend = new FormData()
-        formDataToSend.append('file', formData.manimFile)
+        formDataToSend.append('file', formDataInput.manimFile)
         const response = await fetch('http://localhost:10000/uploadcode/', {
           method: 'POST',
           body: formDataToSend,
@@ -80,15 +83,48 @@ const Component: React.FC = () => {
         const videoFormData = new FormData()
         videoFormData.append('file', videoFile)
 
-        const result = await uploadVideo(videoFormData)
+        const videoResult = await uploadVideo(videoFormData)
 
-        if (result.status !== 200) {
-          throw new Error(result.error || '動画のアップロードに失敗しました')
+        if (videoResult.status !== 200) {
+          throw new Error(videoResult.error || '動画のアップロードに失敗しました')
         }
 
-        console.log('アップロードされた動画のURL:', result.videoUrl)
+        uploadedVideoUrl = videoResult.videoUrl!
+        console.log('アップロードされた動画のURL:', uploadedVideoUrl)
       }
-      // ここで videoUrl を使用して、データベースに保存す���などの処理を行う
+
+      // if (formDataInput.thumbnailFile) {
+      //   const thumbnailFormData = new FormData()
+      //   thumbnailFormData.append('file', formDataInput.thumbnailFile)
+      //   const thumbnailResult = await uploadThumbnail(thumbnailFormData)
+
+      //   if (thumbnailResult.status !== 200) {
+      //     throw new Error(thumbnailResult.error || 'サムネイルのアップロードに失敗しました')
+      //   }
+
+      //   uploadedThumbnailUrl = thumbnailResult.thumbnailUrl
+      //   console.log('アップロードされたサムネイルのURL:', uploadedThumbnailUrl)
+      // }
+
+      // ユーザーIDを取得（例として固定値を使用）
+      const userId: bigint = BigInt(1) // 実際のユーザーIDを取得するロジックに置き換えてください
+
+      // データベースにレコードを挿入
+      const recordResult = await createVideoRecord({
+        userId,
+        title: formDataInput.title,
+        description: formDataInput.description,
+        videoUrl: uploadedVideoUrl,
+        thumbnailUrl: uploadedThumbnailUrl,
+        // 必要に応じて他のフィールドも追加
+      })
+
+      if (recordResult.status !== 201) {
+        throw new Error(recordResult.error || 'データベースへの保存に失敗しました')
+      }
+
+      console.log('データベースに保存された動画:', recordResult.video)
+      // 成功メッセージをユーザーに表示するなどの処理を追加
     } catch (error) {
       console.error('エラーが発生しました:', error)
       // エラーメッセージをユーザーに表示するなどの処理を追加
