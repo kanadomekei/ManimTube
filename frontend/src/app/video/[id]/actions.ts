@@ -1,12 +1,7 @@
-'use server'
-
-import fs from 'fs/promises'
+import videoData from './data.json'
 
 export async function getVideoData() {
-  const jsonData = await fs.readFile('src/app/video/[id]/data.json', 'utf8')
-  const data = JSON.parse(jsonData)
-
-  return data
+  return videoData
 }
 
 export async function incrementLikes(id: string) {
