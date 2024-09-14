@@ -60,18 +60,43 @@ export default function Component() {
     setFormData((prevData) => ({ ...prevData, ...formData }))
     setIsLoading(true)
     console.log('Form submitted:', formData)
-    if (formData.manimFile) {
-      const formDataToSend = new FormData()
-      formDataToSend.append('file', formData.manimFile)
-      const response = await fetch('http://localhost:10000/uploadcode/', {
-        method: 'POST',
-        body: formDataToSend,
-      })
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      setPreviewUrl(url)
+
+    try {
+      if (formData.manimFile) {
+        const formDataToSend = new FormData()
+        formDataToSend.append('file', formData.manimFile)
+        const response = await fetch('http://localhost:10000/uploadcode/', {
+          method: 'POST',
+          body: formDataToSend,
+        })
+        const blob = await response.blob()
+        const url = URL.createObjectURL(blob)
+        setPreviewUrl(url)
+
+        // 変換された動画ファイルをアップロード
+        const videoFile = new File([blob], 'converted_video.mp4', { type: 'video/mp4' })
+        const videoFormData = new FormData()
+        videoFormData.append('file', videoFile)
+
+        const uploadResponse = await fetch('/api/upload-video', {
+          method: 'POST',
+          body: videoFormData,
+        })
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json()
+          throw new Error(errorData.error || '動画のアップロードに失敗しました')
+        }
+
+        const { videoUrl } = await uploadResponse.json()
+        console.log('アップロードされた動画のURL:', videoUrl)
+      }
+    } catch (error) {
+      console.error('エラーが発生しました:', error)
+      // エラーメッセージをユーザーに表示するなどの処理を追加
+    } finally {
+      setIsLoading(false)
     }
-    setIsLoading(false)
   }
 
   return (
