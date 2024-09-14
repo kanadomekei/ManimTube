@@ -35,3 +35,15 @@ export interface VideoData {
     thumbnail: string
   }[]
 }
+
+export type SearchData = {
+  id: number
+  title: string
+  views: string
+  postedAgo: string
+  channelName: string
+  description: string
+  thumbnail: string
+  channelAvatar: string
+  tags: string[]
+}
