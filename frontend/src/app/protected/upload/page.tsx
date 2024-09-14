@@ -48,22 +48,30 @@ export default function Component() {
     }
   }, [previewUrl, thumbnailUrl])
 
-  const handleFormSubmit = async (data: typeof formData) => {
-    setFormData(data)
-    setIsLoading(true) // ロード開始
-    console.log('Form submitted:', data)
-    if (data.manimFile) {
-      const formData = new FormData()
-      formData.append('file', data.manimFile)
+  const handleFormSubmit = async (formData: {
+    title: string
+    tags: string[]
+    manimFile: File | null
+    thumbnailFile: File | null
+    description: string
+    algorithmExplanation: string
+    references: string[]
+  }) => {
+    setFormData((prevData) => ({ ...prevData, ...formData }))
+    setIsLoading(true)
+    console.log('Form submitted:', formData)
+    if (formData.manimFile) {
+      const formDataToSend = new FormData()
+      formDataToSend.append('file', formData.manimFile)
       const response = await fetch('http://localhost:10000/uploadcode/', {
         method: 'POST',
-        body: formData,
+        body: formDataToSend,
       })
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       setPreviewUrl(url)
     }
-    setIsLoading(false) // ロード終了
+    setIsLoading(false)
   }
 
   return (
