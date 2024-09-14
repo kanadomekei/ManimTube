@@ -1,9 +1,85 @@
--- CreateTable
-CREATE TABLE "Todo" (
-    "id" SERIAL NOT NULL,
-    "title" TEXT NOT NULL,
-    "date" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "done" BOOLEAN NOT NULL DEFAULT false,
+CREATE TABLE
+  users (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    auth_id UUID NOT NULL,
+    username TEXT NOT NULL,
+    avatar TEXT,
+    twitter_url TEXT,
+    github_url TEXT,
+    description TEXT,
+    country TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  );
 
-    CONSTRAINT "Todo_pkey" PRIMARY KEY ("id")
-);
+CREATE TABLE
+  videos (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id BIGINT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    video_url TEXT NOT NULL,
+    manim_url TEXT,
+    thumbnail_url TEXT,
+    VIEWS BIGINT DEFAULT 0,
+    article_url TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+  );
+
+CREATE TABLE
+  likes (
+    user_id BIGINT NOT NULL,
+    video_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, video_id),
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE
+  );
+
+CREATE TABLE
+  COMMENTS (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    user_id BIGINT NOT NULL,
+    video_id BIGINT NOT NULL,
+    CONTENT TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+    FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE
+  );
+
+CREATE TABLE
+  tags (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    NAME TEXT NOT NULL
+  );
+
+CREATE TABLE
+  video_tags (
+    video_id BIGINT NOT NULL,
+    tag_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (video_id, tag_id),
+    FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+  );
+
+CREATE TABLE
+  reference_items (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    title TEXT NOT NULL,
+    url TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  );
+
+CREATE TABLE
+  video_references (
+    video_id BIGINT NOT NULL,
+    reference_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (video_id, reference_id),
+    FOREIGN KEY (video_id) REFERENCES videos (id) ON DELETE CASCADE,
+    FOREIGN KEY (reference_id) REFERENCES reference_items (id) ON DELETE CASCADE
+  );
